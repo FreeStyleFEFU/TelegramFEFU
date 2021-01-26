@@ -72,6 +72,8 @@ def setToDataBase(data):
 
 
 def bot():
+    setToDataBase(get_data_json())
+
     bot = telebot.TeleBot(TOKEN)
 
     @bot.message_handler(commands=['worker'])
@@ -79,23 +81,22 @@ def bot():
         text_list = message.text.split(' ')
         text_list.pop(0)
         text = ' '.join(text_list)
-        print(text)
-        find = collection.find_one({ 'Должность': text })
-        print(find)
-        if find == None:
+        didFind = 0
+        for obj in collection.find():
+            if obj['Должность'].lower() == text.lower():
+                bot.send_message(message.chat.id, obj['Фамилия'])
+                bot.send_message(message.chat.id, obj['Имя'])
+                bot.send_message(message.chat.id, obj['Отчество'])
+                bot.send_message(message.chat.id, obj['Должность'])
+                bot.send_message(message.chat.id, obj['Адрес'])
+                bot.send_message(message.chat.id, obj['Телефон'])
+                bot.send_message(message.chat.id, obj['Почта'])
+                didFind = 1
+        if didFind == 0:
             bot.send_message(message.chat.id, 'Нет такого')
-        else:
-            bot.send_message(message.chat.id, find['Фамилия'])
-            bot.send_message(message.chat.id, find['Имя'])
-            bot.send_message(message.chat.id, find['Отчество'])
-            bot.send_message(message.chat.id, find['Должность'])
-            bot.send_message(message.chat.id, find['Адрес'])
-            bot.send_message(message.chat.id, find['Телефон'])
-            bot.send_message(message.chat.id, find['Почта'])
 
     bot.polling()
 
 if __name__ == "__main__":
-    # setToDataBase(get_data_json())
     bot()
 
