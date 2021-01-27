@@ -2,6 +2,12 @@ import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 import telebot
+from multiprocessing import Process
+import time
+import schedule
+
+
+general_data = []
 
 TOKEN = '1465745696:AAFiPZRJFZjhOwXv8y18yFjN6A9WPh4IA2Y'
 cluster = MongoClient('mongodb+srv://FreeStyle:hQXlKHByR4QWZNau@cluster0.7ed7r.mongodb.net/ProrectorsFEFU?retryWrites=true&w=majority')
@@ -63,18 +69,26 @@ def get_data_json():
         split_fio[d].update(data[d][0])
         to_data_base.append(split_fio[d])
 
-    return to_data_base
+    global general_data
+    general_data = to_data_base
+    setToDataBase()
 
-def setToDataBase(data):
+
+def setToDataBase():
+    global general_data
     collection.delete_many({})
-    for d in data:
+    for d in general_data:
         collection.insert_one(d)
 
 
 def bot():
-    setToDataBase(get_data_json())
-
     bot = telebot.TeleBot(TOKEN)
+
+    @bot.message_handler(commands=['list'])
+    def message(message):
+        for obj in collection.find():
+            bot.send_message(message.chat.id, obj['Должность'])
+
 
     @bot.message_handler(commands=['worker'])
     def message(message):
@@ -97,6 +111,24 @@ def bot():
 
     bot.polling()
 
+def parser():
+    schedule.every().day.at("19:38").do(get_data_json)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
 if __name__ == "__main__":
-    bot()
+    start_parser = Process(target=parser)
+    start_bot = Process(target=bot)
+
+    start_parser.start()
+    start_bot.start()
+
+    start_parser.join()
+    start_bot.join()
+
+
+
+
 
