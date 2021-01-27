@@ -63,14 +63,12 @@ def get_data_json():
                 'Отчество': fio[2],
             }
         )
+    global general_data
 
-    to_data_base = []
     for d in range(len(data)):
         split_fio[d].update(data[d][0])
-        to_data_base.append(split_fio[d])
+        general_data.append(split_fio[d])
 
-    global general_data
-    general_data = to_data_base
     setToDataBase()
 
 
