@@ -10,7 +10,7 @@ import schedule
 general_data = []
 
 TOKEN = '1465745696:AAFiPZRJFZjhOwXv8y18yFjN6A9WPh4IA2Y'
-cluster = MongoClient('mongodb+srv://FreeStyle:hQXlKHByR4QWZNau@cluster0.7ed7r.mongodb.net/ProrectorsFEFU?retryWrites=true&w=majority')
+cluster = MongoClient('mongodb+srv://FreeStyle:Kp10SSss17WWbZ1u@cluster0.7ed7r.mongodb.net/ProrectorsFEFU?retryWrites=true&w=majority')
 db = cluster['ProrectorsFEFU']
 collection = db['CollectionFEFU']
 
@@ -63,11 +63,14 @@ def get_data_json():
                 'Отчество': fio[2],
             }
         )
-    global general_data
 
+    to_data_base = []
     for d in range(len(data)):
         split_fio[d].update(data[d][0])
-        general_data.append(split_fio[d])
+        to_data_base.append(split_fio[d])
+
+    global general_data
+    general_data = to_data_base
 
     setToDataBase()
 
@@ -84,6 +87,7 @@ def bot():
 
     @bot.message_handler(commands=['list'])
     def message(message):
+        print(collection.find())
         for obj in collection.find():
             bot.send_message(message.chat.id, obj['Должность'])
 
@@ -93,7 +97,7 @@ def bot():
         text_list = message.text.split(' ')
         text_list.pop(0)
         text = ' '.join(text_list)
-        didFind = 0
+        found = 0
         for obj in collection.find():
             if obj['Должность'].lower() == text.lower():
                 bot.send_message(message.chat.id, obj['Фамилия'])
@@ -103,14 +107,14 @@ def bot():
                 bot.send_message(message.chat.id, obj['Адрес'])
                 bot.send_message(message.chat.id, obj['Телефон'])
                 bot.send_message(message.chat.id, obj['Почта'])
-                didFind = 1
-        if didFind == 0:
+                found = 1
+        if found == 0:
             bot.send_message(message.chat.id, 'Нет такого')
 
     bot.polling()
 
 def parser():
-    schedule.every().day.at("19:38").do(get_data_json)
+    schedule.every().day.at("23:07").do(get_data_json)
     while True:
         schedule.run_pending()
         time.sleep(1)
